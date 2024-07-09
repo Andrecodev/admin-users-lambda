@@ -1,0 +1,114 @@
+Resources:
+  LambdaFunctionAdminUsersResource:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      # The code for the function
+      Code:
+        ZipFile: "/**"
+      #(NOT USED) A dead letter queue configuration that specifies the queue or topic where Lambda sends asynchronous events when they fail processing
+      #DeadLetterConfig:
+      # A description of the function
+      Description: "This lambda consumes SOAP orchestrator to login services (login, keys, passwordRecovery) and users management (create, update, delete)"
+      # Environment variables that are accessible from function code during execution
+      Environment:
+        Variables:
+          REGION: ${file(serverless.yml):provider.region}
+          ORCHESTRATOR_LAMBDA: ${file(serverless.yml):custom.orchestratorLambdaName}
+          UTILS_LAMBDA: ${file(serverless.yml):custom.lambdaNameUtils}
+          QUERY_INTERM: ${file(serverless.yml):custom.lambdaNameIntermediary}
+          REDIS_LAMBDA: ${file(serverless.yml):custom.lambdaNameRedis}
+          COMPANIES_TABLE: ${file(serverless.yml):custom.dbCompaniesTable}
+          LOGIN_TABLE: ${file(serverless.yml):custom.dbLoginTable}
+          MODULES_TABLE: ${file(serverless.yml):custom.dbModulesTable}
+          USER_MODULES_TABLE: ${file(serverless.yml):custom.dbUserModulesTable}
+          LOG_TABLE: ${file(serverless.yml):custom.dbLogTable}
+          SM_AUTH: !ImportValue SecretsManagerAuthResourceName
+          URL_PORTAL: ${file(Jenkins/custom-property.yml):${self:provider.stage}.URL_PORTAL}
+          OU: ${file(Jenkins/custom-property.yml):${self:provider.stage}.OU}
+
+      # The name of the Lambda function, up to 64 characters in length
+      FunctionName: '${file(serverless.yml):custom.lambdaName}'
+      # The name of the method within your code that Lambda calls to execute your function
+      Handler: index.unTokenizedHandler
+      #(NOT USED) The ARN of the AWS Key Management Service (AWS KMS) key that's used to encrypt your function's environment variables
+      #KmsKeyArn:
+      #(NOT USED) A list of function layers to add to the function's execution environment
+      #Layers:
+      # The amount of memory that your function has access to
+      MemorySize: 4092
+      #(NOT USED) The number of simultaneous executions to reserve for the function
+      #ReservedConcurrentExecutions:
+      # The Amazon Resource Name (ARN) of the function's execution role
+      Role: !ImportValue SecretExecutionAuthServiceRoleLambdaResourceName
+      # The identifier of the function's runtime
+      Runtime: nodejs14.x
+      # The amount of time that Lambda allows a function to run before stopping it. The default is 3 seconds. The maximum allowed value is 900 seconds
+      Timeout: 300
+      #(NOT USED) Set Mode to Active to sample and trace a subset of incoming requests with AWS X-Ray
+      #TracingConfig:
+      # For network connectivity to AWS resources in a VPC, specify a list of security groups and subnets in the VPC
+      VpcConfig:
+        SecurityGroupIds: ${file(Jenkins/custom-property.yml):${self:provider.stage}.SecurityGroupIds}
+        SubnetIds: ${file(Jenkins/custom-property.yml):${self:provider.stage}.SubnetIds}
+      # A list of tags to apply to the function
+      Tags:
+        -
+          Key: Name
+          Value: !Join ['', ['Lambda-Function-', '${file(serverless.yml):custom.lambdaName}']]
+
+  LambdaFunctionAdminUsersTokenResource:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      # The code for the function
+      Code:
+        ZipFile: "/**"
+      #(NOT USED) A dead letter queue configuration that specifies the queue or topic where Lambda sends asynchronous events when they fail processing
+      #DeadLetterConfig:
+      # A description of the function
+      Description: "This lambda consumes SOAP orchestrator to admin users (create, update, delete, queryUsers)"
+      # Environment variables that are accessible from function code during execution
+      Environment:
+        Variables:
+          REGION: ${file(serverless.yml):provider.region}
+          ORCHESTRATOR_LAMBDA: ${file(serverless.yml):custom.orchestratorLambdaName}
+          UTILS_LAMBDA: ${file(serverless.yml):custom.lambdaNameUtils}
+          QUERY_INTERM: ${file(serverless.yml):custom.lambdaNameIntermediary}
+          REDIS_LAMBDA: ${file(serverless.yml):custom.lambdaNameRedis}
+          COMPANIES_TABLE: ${file(serverless.yml):custom.dbCompaniesTable}
+          LOGIN_TABLE: ${file(serverless.yml):custom.dbLoginTable}
+          SM_AUTH: !ImportValue SecretsManagerAuthResourceName
+          URL_PORTAL: ${file(Jenkins/custom-property.yml):${self:provider.stage}.URL_PORTAL}
+          OU: ${file(Jenkins/custom-property.yml):${self:provider.stage}.OU}
+
+      # The name of the Lambda function, up to 64 characters in length
+      FunctionName: '${file(serverless.yml):custom.lambdaNameToken}'
+      # The name of the method within your code that Lambda calls to execute your function
+      Handler: index.TokenizedHandler
+      #(NOT USED) The ARN of the AWS Key Management Service (AWS KMS) key that's used to encrypt your function's environment variables
+      #KmsKeyArn:
+      #(NOT USED) A list of function layers to add to the function's execution environment
+      #Layers:
+      # The amount of memory that your function has access to
+      MemorySize: 4092
+      #(NOT USED) The number of simultaneous executions to reserve for the function
+      #ReservedConcurrentExecutions:
+      # The Amazon Resource Name (ARN) of the function's execution role
+      Role: !ImportValue SecretExecutionAuthServiceRoleLambdaResourceName
+      # The identifier of the function's runtime
+      Runtime: nodejs14.x
+      # The amount of time that Lambda allows a function to run before stopping it. The default is 3 seconds. The maximum allowed value is 900 seconds
+      Timeout: 300
+      #(NOT USED) Set Mode to Active to sample and trace a subset of incoming requests with AWS X-Ray
+      #TracingConfig:
+      # For network connectivity to AWS resources in a VPC, specify a list of security groups and subnets in the VPC
+      VpcConfig:
+        SecurityGroupIds: ${file(Jenkins/custom-property.yml):${self:provider.stage}.SecurityGroupIds}
+        SubnetIds: ${file(Jenkins/custom-property.yml):${self:provider.stage}.SubnetIds}
+      # A list of tags to apply to the function
+      Tags:
+        -
+          Key: Name
+          Value: !Join ['', ['Lambda-Function-', '${file(serverless.yml):custom.lambdaNameToken}']]
+
+
+

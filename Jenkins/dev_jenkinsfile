@@ -1,0 +1,165 @@
+@Library('utils@master') _
+
+def envDeployment = "dev"
+def MAJOR_VERSION = "1"
+def ARTIFACT_VERSION = "${MAJOR_VERSION}.${BUILD_NUMBER}"
+
+def zipName = "ms-oficina-linea-${envDeployment}-admin-users.zip"
+def stackName = "intl-co-oficinalinea-ms-cfn-${envDeployment}-admin-users"
+def lambdaName = "intl-co-oficinalinea-ms-lambda-${envDeployment}-admin-users"
+def lambdaNameToken = "intl-co-oficinalinea-ms-lambda-${envDeployment}-admin-users-token"
+
+pipeline {
+	options {
+		ansiColor('gnome-terminal')
+	}
+
+	agent {
+		node {
+			label 'linux'
+		}
+	}
+
+	stages {
+
+		stage('Prepare Stage') {
+			steps {
+				sh 'npm --version'
+				sh 'sls --version'
+				sh 'aws --version'
+			}
+		}
+
+		stage('Clone Repo') {
+			steps {
+				checkout scm
+			}
+		}
+		stage('Install Prod Dependencies') {
+			steps {
+
+				sh 'npm install --only=prod'
+
+			}
+		}
+		stage('Create Package Folder') {
+			steps {
+				sh 'ls -S'
+				sh 'node --version'
+				sh 'mkdir dist && mv node_modules/ dist/'
+			}
+		}
+
+		stage('Install Dependencies') {
+			steps {
+				sh 'rm -rf build node_modules package-lock.json'
+				sh 'npm cache clean --force'
+				sh 'npm cache verify'
+				sh 'npm i -f'
+			}
+		}
+
+		// stage('Unit Test & Coverage') {
+		// 	steps {
+		// 		sh 'npm run test'
+		// 	}
+		// }
+
+		stage('Package Project') {
+			steps {
+				sh 'npm run build-npm'
+			}
+		}
+
+		stage('SonarQube Analysis') {
+			steps {
+				withSonarQubeEnv('sonarqube') {
+					sh 'node_modules/sonar-scanner/bin/sonar-scanner -X -Dproject.settings=Jenkins/Liberty/sonar-project.properties -Dsonar.projectVersion=' + ARTIFACT_VERSION + ' '
+				}
+				sleep(time:5,unit:"SECONDS")
+			}
+		}
+
+		stage('Quality Gate Analysis') {
+			steps {
+				timeout(time: 1, unit: 'MINUTES') {
+					script  {
+						def qg = waitForQualityGate()
+						if (qg.status != 'OK') {
+							error "Pipeline aborted due to quality gate failure: ${qg.status}"
+						}
+					}
+				}
+			}
+		}
+
+		stage('Zip Files') {
+			steps {
+				script {
+				    zip dir: 'dist', glob: '', zipFile: "${zipName}"
+				}
+			}
+        }
+
+		stage('Deploy') {
+			steps {
+				deployToDev {
+					withAWS(credentials:getAWSCredentialID(environment:"${env.APPENV}"), region:'us-east-1') {
+						sh "export SLS_DEBUG=true && sls deploy --stage ${envDeployment} --region us-east-1 --verbose"
+					}
+				}
+			}
+        }
+
+		stage('Update Lambda Function') {
+			steps {
+				deployToDev {
+					withAWS(credentials:getAWSCredentialID(environment:"${env.APPENV}"), region:'us-east-1') {
+						sh "aws lambda update-function-code --function-name ${lambdaName} --zip-file fileb://${zipName}"
+						sh "aws lambda update-function-code --function-name ${lambdaNameToken} --zip-file fileb://${zipName}"
+					}
+				}
+			}
+        }
+
+		stage('Resume CloudFormation StackResources') {
+			steps {
+				deployToDev {
+					withAWS(credentials:getAWSCredentialID(environment:"${env.APPENV}"), region:'us-east-1') {
+						sh "aws cloudformation describe-stack-resources --stack-name ${stackName} --query 'StackResources[*].{Type:ResourceType,LogicalID:LogicalResourceId,PhysicalID:PhysicalResourceId,Status:ResourceStatus}' --output table"
+					}
+				}
+			}
+        }
+
+		stage('Resume CloudFormation StackOutputs') {
+			steps {
+				deployToDev {
+					withAWS(credentials:getAWSCredentialID(environment:"${env.APPENV}"), region:'us-east-1') {
+						sh "aws cloudformation describe-stacks --stack-name ${stackName} --query 'Stacks[*].Outputs[*].{Key:OutputKey,Value:OutputValue}' --output table"
+					}
+				}
+			}
+        }
+	}
+
+	post {
+		success {
+			mail to: 'b6a2086a.LibertyMutual.onmicrosoft.com@amer.teams.ms', from: 'noreply-cdp@libertymutual.com',
+                subject: "Dev MicroService Admin Users Deployment: ${currentBuild.fullDisplayName} ",
+				body: "Cordial saludo, \n\n se adjunta los resultados obtenidos del job: ${env.JOB_BASE_NAME} \n - Status: Succeed Pipeline \n - Build url Job: ${env.BUILD_URL} \n - Build No ${env.BUILD_ID} "
+		}
+
+		failure {
+			mail to: 'b6a2086a.LibertyMutual.onmicrosoft.com@amer.teams.ms', from: 'noreply-cdp@libertymutual.com',
+                subject: "Dev MicroService Admin Users Deployment: ${currentBuild.fullDisplayName} ",
+				body: "Cordial saludo, \n\n se adjunta los resultados obtenidos del job: ${env.JOB_BASE_NAME} \n - Status: Failed Pipeline \n - Build url Job: ${env.BUILD_URL} \n - Build No ${env.BUILD_ID} "
+		}
+
+		unstable {
+			mail to: 'b6a2086a.LibertyMutual.onmicrosoft.com@amer.teams.ms', from: 'noreply-cdp@libertymutual.com',
+                subject: "Dev MicroService Admin Users Deployment: ${currentBuild.fullDisplayName} ",
+				body: "Cordial saludo, \n\n se adjunta los resultados obtenidos del job: ${env.JOB_BASE_NAME} \n - Status: Unstabled Pipeline \n - Build url Job: ${env.BUILD_URL} \n - Build No ${env.BUILD_ID} "
+		}
+	}
+}

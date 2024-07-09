@@ -1,0 +1,70 @@
+{
+  "name": "users-admin-lambda",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js",
+    "lint": "eslint",
+    "build-yarn": "yarn install --production=true --modules-folder ./dist/node_modules && babel ./ --out-dir dist/ --ignore ./node_modules,./dist,./.babelrc,./package.json,./npm-debug.log",
+    "build-npm": "babel ./ --out-dir dist/ --ignore ./node_modules,./dist,./.babelrc,./package.json,./npm-debug.log",
+    "test": "cross-env REGION=us-east-1 ORCHESTRATOR_LAMBDA=orchestrator_lambda QUERY_INTERM=query_interm UTILS_LAMBDA=utils_lambda REDIS_LAMBDA=redis_lambda MODULES_TABLE=modules_table USER_MODULES_TABLE=user_modules_table LOG_TABLE=dev-table_logs COMPANIES_TABLE=companies_table LOGIN_TABLE=login_table JWT_PASS=jwt-password SM_AUTH=smAuth KEYAPP=TheBestSecretKey KEYDES=LMCssoUnq_201803LMCssoUnq_201803 OU=DEV URL_PORTAL=https://nuevaoficinaenlineadev-piloto.libertyseguros.co jest --coverage --verbose"
+  },
+  "keywords": [],
+  "author": "Liberty",
+  "devDependencies": {
+    "@babel/cli": "7.6.2",
+    "aws-sdk": "2.814.0",
+    "cross-env": "6.0.3",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.1",
+    "jest": "24.9.0",
+    "nodemon": "^2.0.12",
+    "prettier": "^2.3.2",
+    "serverless-bundle": "1.2.5",
+    "sonar-scanner": "3.1.0"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^8.0.2",
+    "activedirectory": "^0.7.2",
+    "aws-sdk": "^2.814.0",
+    "aws-sdk-mock": "^5.8.0",
+    "cd": "^0.3.3",
+    "dayjs": "^1.11.7",
+    "dotenv": "^16.0.3",
+    "express": "^4.17.1",
+    "generate-password": "^1.7.0",
+    "jest": "24.9.0",
+    "joi": "^17.7.1",
+    "jsonwebtoken": "^9.0.0",
+    "nodemailer": "^6.9.1",
+    "serverless-http": "^2.5.0",
+    "uuid": "^9.0.0"
+  },
+  "jest": {
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/test/utils/"
+    ],
+    "collectCoverageFrom": [
+      "index.{ts,js}",
+      "Business/**/*.{ts,js}",
+      "libs/**/*.{ts,js}",
+      "middlewares/**/*.{ts,js}",
+      "models/**/*.{ts,js}",
+      "routes/**/*.{ts,js}",
+      "schemas/**/*.{ts,js}"
+    ],
+    "transformIgnorePatterns": [
+      "/node_modules/(?!activedirectory)"
+    ]
+  },
+  "engines": {
+    "node": "14.x"
+  }
+}

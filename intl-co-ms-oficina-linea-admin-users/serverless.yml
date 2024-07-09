@@ -1,0 +1,107 @@
+service:
+  # Define service name
+  name: intl-co-oficinalinea-ms-cfn-${self:provider.stage}-admin-users
+frameworkVersion: '>=1.0.0 <=3.0.0'
+
+custom:
+  # Set Lambda name
+  lambdaName: intl-co-oficinalinea-ms-lambda-${self:provider.stage}-admin-users
+  lambdaNameToken: intl-co-oficinalinea-ms-lambda-${self:provider.stage}-admin-users-token
+  # Set Orchestrator Lambda name
+  orchestratorLambdaName: intl-co-oficinalinea-ms-lambda-${self:provider.stage}-soap-orchestrator
+  # Set Utils Lambda Name
+  lambdaNameUtils: intl-co-oficinalinea-ms-lambda-${self:provider.stage}-get-utils
+  # Set Redis Lambda Name
+  lambdaNameRedis: intl-co-oficinalinea-ms-lambda-${self:provider.stage}-redis-client
+  # Set Broker Intermediary Lambda name
+  lambdaNameIntermediary: intl-co-oficinalinea-lambda-auth-query-keys-${self:provider.stage}
+  # Set Modules Table
+  dbModulesTable: intl-co-oficinalinea-ms-dynamodb-${self:provider.stage}-table_modules
+  # Set User Modules Table
+  dbUserModulesTable: intl-co-oficinalinea-ms-dynamodb-${self:provider.stage}-table_modules-user
+    # Set User Modules Table
+  dbLogTable: intl-co-oficinalinea-ms-dynamodb-${self:provider.stage}-table_logs
+  # Set Login Table
+  dbLoginTable: intl-co-oficinalinea-ms-dynamodb-${self:provider.stage}-table_login
+  # Set Companies Table
+  dbCompaniesTable: intl-co-oficinalinea-ms-dynamodb-${self:provider.stage}-table_general-company
+  # Set webpack configuration
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+
+provider:
+  # Set cloud provider (AWS)
+  name: aws
+  # Set NodeJS runtime version
+  runtime: nodejs14.x
+  # Set the default Stage used. Default is dev
+  stage: ${opt:stage, 'dev'}
+  # Set Region to deploy service. Default is us-east-1
+  region: ${opt:region, 'us-east-1'}
+  # Set CloudFormation Stack Name
+  stackName: ${self:service.name}
+  # Set memory size
+  memorySize: 4092
+  # Set timeout
+  timeout: 30
+  # Deploy bucket name
+  deploymentBucket:
+    name: intl-co-oficinalinea-s3-${self:provider.stage}-appwebdeploybucket
+  stackTags: ${file(Jenkins/tags.yml):default_resource}
+
+# Define globs that will be excluded / included from the resulting artifact
+package:
+  individually: true
+  include:
+    - 'config/**'
+    - 'controller/**'
+    - 'utils/**'
+    - 'routes/**'
+    - 'dist/**'
+    - 'test/**'
+    - '**.yml'
+    - 'index.js'
+    - '.babelrc'
+    - '.env'
+    - 'package.json'
+    - 'Readme.md'
+    - 'webpack.config.js'
+  exclude:
+    - '.git/**'
+    - '.serverless/**'
+    - 'coverage/**'
+  excludeDevDependencies: true
+
+# The "Resources" separated with CloudFormation templates
+resources:
+  - Resources:
+  - ${file(Jenkins/cloudwatch.yml)}
+  - ${file(Jenkins/lambda-function.yml)}
+
+  - Outputs:
+      CloudWatchAdminUsersResourceArn:
+        Description: CloudWatch Log ARN
+        Value: !GetAtt [CloudWatchAdminUsersResource, Arn]
+        Export:
+          Name: CloudWatch-AdminUsers-ResourceArn-${self:provider.stage}
+
+      CloudWatchAdminUsersTokenResourceArn:
+        Description: CloudWatch Log ARN
+        Value: !GetAtt [CloudWatchAdminUsersTokenResource, Arn]
+        Export:
+          Name: CloudWatch-AdminUsersToken-ResourceArn-${self:provider.stage}
+
+      LambdaFunctionAdminUsersResourceArn:
+        Description: Lambda Function ARN Resource
+        Value: !GetAtt [LambdaFunctionAdminUsersResource, Arn]
+        Export:
+          Name: LambdaFunction-AdminUsers-ResourceArn-${self:provider.stage}
+      
+      LambdaFunctionAdminUsersTokenResourceArn:
+        Description: Lambda Function ARN Resource
+        Value: !GetAtt [LambdaFunctionAdminUsersTokenResource, Arn]
+        Export:
+          Name: LambdaFunction-AdminUsersToken-ResourceArn-${self:provider.stage}
+
+

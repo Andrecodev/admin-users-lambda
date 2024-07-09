@@ -1,0 +1,12 @@
+const TIPOGESTIONIAXIS = {
+    SINACCION: 0,
+    USUARIONUEVO: 1,
+    AGREGAPORTAL: 2,
+    UNIFICAPORTAL: 3,
+    MIGRARUSUARIO: 4
+}
+
+
+module.exports= {
+    TIPOGESTIONIAXIS,
+};

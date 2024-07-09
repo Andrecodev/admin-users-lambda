@@ -1,0 +1,28 @@
+Resources:
+  CloudWatchAdminUsersResource:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      # The name of the log group
+      LogGroupName: !Join ['', ['/aws/lambda/', '${file(serverless.yml):custom.lambdaName}']]
+      # The number of days to retain the log events in the specified log group
+      RetentionInDays: 365
+      # Tags for the cache log group
+      Tags:
+      -
+        Key: Name
+        Value: !Join ['', ['logGroup-', '${file(serverless.yml):provider.stackName}']]
+
+  CloudWatchAdminUsersTokenResource:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      # The name of the log group
+      LogGroupName: !Join ['', ['/aws/lambda/', '${file(serverless.yml):custom.lambdaNameToken}']]
+      # The number of days to retain the log events in the specified log group
+      RetentionInDays: 365
+      # Tags for the cache log group
+      Tags:
+      -
+        Key: Name
+        Value: !Join ['', ['logGroup-', '${file(serverless.yml):provider.stackName}']]
+
+

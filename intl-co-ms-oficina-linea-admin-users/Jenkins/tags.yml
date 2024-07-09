@@ -1,0 +1,15 @@
+default_resource: &default_resource
+  lm_troux_uid: 3D243AAC-579D-4FE3-8A01-FE6735BDD836
+  lm_app: 'CO PORTAL INTERMEDIARIOS AWS'
+  lm_app_env: ${self:provider.stage}
+  lm_sbu: INTL
+  intl_country: co
+  intl_region : latam
+
+stack:
+  <: *default_resource
+  Name: !Join ['', ['stack-', '${file(serverless.yml):provider.stackName}']]
+
+bucket:
+  <<: *default_resource
+  Name: !Join ['', ['bucket-', '${file(serverless.yml):provider.stackName}']]

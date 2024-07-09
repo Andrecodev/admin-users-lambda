@@ -1,0 +1,42 @@
+dev:
+  # Set EC2 Instances ID
+  ec2ID: i-09ecc5dc7f478b92f
+  # Set VPC GroupID
+  SecurityGroupIds:
+    - sg-062e1b3658b20104d
+    - sg-073189a48c51937ab
+  # Set VPC SubnetID
+  SubnetIds:
+    - subnet-c376d0a7
+    - subnet-a4596888
+  # best 
+
+  URL_PORTAL : http://portaldev.libertycolombia.com 
+  OU : DEV
+nonprod:
+  # Set EC2 Instance ID
+  ec2ID: i-087948e559826196e
+  # Set VPC GroupID
+  SecurityGroupIds:
+    - sg-05a983a080ce8aeb9
+  # Set VPC SubnetID
+  SubnetIds: 
+    - subnet-8ce8dfd6
+    - subnet-4de14229
+  # best 
+
+  URL_PORTAL : https://oficinaenlineauat.libertycolombia.com 
+  OU : PREP
+prod:
+  # Set EC2 Instance ID
+  ec2ID: i-02e21017349e93c6a
+  # Set VPC GroupID
+  SecurityGroupIds:
+    - sg-0349fdf1e88e4c6ff
+  # Set VPC SubnetID
+  SubnetIds: 
+    - subnet-e836d0b5
+    - subnet-2b02814f
+  # best  
+  URL_PORTAL : https://oficinaenlinea.libertyseguros.co
+  OU : Oleoductos
